@@ -11,7 +11,7 @@ load(file = 'examples.Rdata')
 ui <- fluidPage(
   
   # App title ----
-  titlePanel("PIPET 생물학적동등성 분석 (2x2 crossover design, average bioequivalence)"),
+  titlePanel("PIPET ECG"),
   
   # Sidebar layout with input and output definitions ----
   sidebarLayout(
