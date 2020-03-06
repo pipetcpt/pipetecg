@@ -9,8 +9,15 @@ load(file = 'examples.Rdata')
 
 analyze_ecg <- function(df){
   write_csv(df, 'df.csv')
-  read_csv('df.csv')
+  system('wrsamp -i df.csv -F 500 -o 1000 1 2 3 4 5 6 7 8 9 10 11 12')
+  system('ecgpuwave -r 1000 -a 1000')
+  system('rdann -r 1000 -a 1000 > 1000.table')
+  read_table(sprintf('1000.table', .x), 
+             col_names = c('time', 'index', 
+                           'anno', 'no1', 
+                           'no2', 'class'))
 }
+
 
 # Define UI for data download app ----
 ui <- fluidPage(
