@@ -15,7 +15,8 @@ analyze_ecg <- function(df){
   read_table('1000.table', 
              col_names = c('time', 'index', 
                            'anno', 'no1', 
-                           'no2', 'class'))
+                           'no2', 'class')) %>% 
+    mutate(index = index*2)
 }
 
 
@@ -79,8 +80,8 @@ ui <- fluidPage(
                    choices = c(None = "",
                                "Double Quote" = '"',
                                "Single Quote" = "'"),
-                   selected = '"'),
-      shiny::verbatimTextOutput('be_result_auc')
+                   selected = '"')
+      
     ),
     
     # Main panel for displaying outputs ----
@@ -96,6 +97,7 @@ ui <- fluidPage(
       shiny::h3('12-lead signal'),
       plotOutput("plot_12lead", height = '1500px'),
       #fluidRow(splitLayout(cellWidths = c("100%"), )),
+      shiny::verbatimTextOutput('be_result_auc'),
       
       includeMarkdown("references.md")
     )
@@ -137,7 +139,8 @@ server <- function(input, output) {
       geom_line() +
       labs(x = 'Time (ms)', y = 'ECG Amplitude')+ theme_bw() +
       geom_vline(data = analyze_ecg(datasetInput()), 
-                 xintercept = analyze_ecg(datasetInput())$index, color = 'red')
+                 aes(xintercept = analyze_ecg(datasetInput())$index, 
+                 color = analyze_ecg(datasetInput())$anno))
     })
   
   output$plot_12lead <- renderPlot({
