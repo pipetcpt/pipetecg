@@ -7,6 +7,11 @@ require(BE)
 
 load(file = 'examples.Rdata')
 
+analyze_ecg <- function(df){
+  write_csv(df, 'df.csv')
+  read_csv('df.csv')
+}
+
 # Define UI for data download app ----
 ui <- fluidPage(
   
@@ -29,18 +34,10 @@ ui <- fluidPage(
                    selected = 'default'),
      
       selectInput("dataset", NULL,
-                  choices = c("BE 패키지 내장: N=33" = "NCAResult4BE", 
-                              "Case 1: N=18, Sauter et al. 1992" = "case1",
-                              "Case 2: N=18, Clayton and Leslie 1981" = "case2",
-                              "Case 3: N=13, Case 2 with imbalance between sequences" = "case3",
-                              "Case 4: N=18, Case 2 with extreme range" = "case4",
-                              "Case 5: N=18, Case 2 with an outlier" = "case5",
-                              "Case 6: N=100, Simulated dataset, balanced,  residual is not normally distributed" = "case6",
-                              "Case 7: N=1000, Simulated dataset, balanced, normal distributed residual" = "case7",
-                              "Case 8: N=1000, Case 7 with outliers, imbalance, and an extreme range" = "case8"
-                              )),
+                  choices = c("Example ECG 1" = "case1", 
+                              "Example ECG 2" = "case2")),
       
-      shiny::tags$p('입력자료는 아래와 같이 준비해주세요. SUBJ에 대상자 번호를 적어줍니다. GRP에는 RT인지 TR인지 sequence 정보를 적어줍니다. PRD에는 1기 혹은 2기를 적어줍니다. TRT에는 각 기에 투여받은 약물 정보를 적어줍니다. AUClast, Cmax, Tmax는 비구획 분석으로 얻어진 값을 넣어주면 됩니다. 본 앱의 개발자는 누가 파일을 올렸는지 알 수 없고, 어떠한 경로로도 올린 파일에 접근할 수 없으므로 안심하고 사용하셔도 됩니다. (총 7개의 열로 구성됨)'),
+      shiny::tags$p('업로드 할 ECG 자료는 아래의 10초간 12 channel ECG를 500Hz로 sampling하여 CSV형태로 준비해주세요.'),
       
       shiny::h2('1-B: 자료 확인'),
       
@@ -81,23 +78,17 @@ ui <- fluidPage(
     # Main panel for displaying outputs ----
     mainPanel(
       
-      shiny::h2('3: 결과 확인'),
-      shiny::h3('AUClast'),
+      shiny::h2('3: ECG 결과 확인'),
+      checkboxInput("annotate1", "Annotate the ECG record", TRUE),
+      shiny::h3('Lead II signal'),
       shiny::verbatimTextOutput('be_result_auc'), 
-      fluidRow(splitLayout(cellWidths = c("50%", "50%"), plotOutput("plot_auc_a"), plotOutput("plot_auc_b"))),
+      plotOutput("plot_leadii"),
+      #fluidRow(splitLayout(cellWidths = c("100%"), )),
       
-      conditionalPanel(
-        condition = "input.dataset == 'NCAResult4BE'",
-        
-        shiny::h3('Cmax'),
-        shiny::verbatimTextOutput('be_result_cmax'), 
-        fluidRow(splitLayout(cellWidths = c("50%", "50%"), plotOutput("plot_cmax_a"), plotOutput("plot_cmax_b"))),
-        
-        shiny::h3('Tmax'),
-        shiny::verbatimTextOutput('be_result_tmax'),
-        fluidRow(splitLayout(cellWidths = c("50%", "50%"), plotOutput("plot_tmax_a"), plotOutput("plot_tmax_b")))
-        
-      ),
+      shiny::h3('12-lead signal'),
+      plotOutput("plot_12lead", height = '1500px'),
+      #fluidRow(splitLayout(cellWidths = c("100%"), )),
+      
       includeMarkdown("references.md")
     )
   )
@@ -117,14 +108,7 @@ server <- function(input, output) {
     } else {
       switch(input$dataset,
              "case1" = examples$case1,
-             "case2" = examples$case2,
-             "case3" = examples$case3,
-             "case4" = examples$case4,
-             "case5" = examples$case5,
-             "case6" = examples$case6,
-             "case7" = examples$case7,
-             "case8" = examples$case8,
-             "NCAResult4BE" = BE::NCAResult4BE)
+             "case2" = examples$case2)
     }
   })
   
@@ -134,16 +118,29 @@ server <- function(input, output) {
   })
   
   #output$be_result()
-  output$be_result_auc <- renderPrint({ BE::test2x2(datasetInput(), "AUClast") }) 
+  output$be_result_auc <- renderPrint({ analyze_ecg(datasetInput()) }) 
   output$be_result_cmax <- renderPrint({ BE::test2x2(datasetInput(), "Cmax") }) 
   output$be_result_tmax <- renderPrint({ BE::test2x2(datasetInput(), "Tmax") })
   
-  output$plot_auc_a <- renderPlot({plot2x2a(datasetInput(), "AUClast")})
-  output$plot_auc_b <- renderPlot({plot2x2b(datasetInput(), "AUClast")})
-  output$plot_cmax_a <- renderPlot({plot2x2a(datasetInput(), "Cmax")})
-  output$plot_cmax_b <- renderPlot({plot2x2b(datasetInput(), "Cmax")})
-  output$plot_tmax_a <- renderPlot({plot2x2a(datasetInput(), "Tmax")})
-  output$plot_tmax_b <- renderPlot({plot2x2b(datasetInput(), "Tmax")})
+  output$plot_leadii <- renderPlot({
+    datasetInput() %>% 
+      mutate(index = index*2) %>% 
+      ggplot(aes(index, II)) +
+      geom_line() +
+      labs(x = 'Time (ms)', y = 'ECG Amplitude')+ theme_bw()
+      #geom_vline(data = anno, xintercept = anno$index, color = 'red')
+    })
+  
+  output$plot_12lead <- renderPlot({
+    datasetInput() %>% 
+      mutate(index = index*2) %>% 
+      gather(lead, value, -index) %>% 
+      ggplot(aes(index, value)) +
+      facet_wrap(.~lead, ncol=1) +
+      geom_line() +
+      labs(x = 'Time (ms)', y = 'ECG Amplitude') + theme_bw()
+    #geom_vline(data = anno, xintercept = anno$index, color = 'red')
+  })
   
   # Downloadable csv of selected dataset ----
   output$downloadData <- downloadHandler(
