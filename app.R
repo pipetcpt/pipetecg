@@ -12,7 +12,7 @@ analyze_ecg <- function(df){
   system('wrsamp -i df.csv -F 500 -o 1000 1 2 3 4 5 6 7 8 9 10 11 12')
   system('ecgpuwave -r 1000 -a 1000')
   system('rdann -r 1000 -a 1000 > 1000.table')
-  read_table(sprintf('1000.table', .x), 
+  read_table('1000.table', 
              col_names = c('time', 'index', 
                            'anno', 'no1', 
                            'no2', 'class'))
