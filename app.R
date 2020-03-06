@@ -79,7 +79,8 @@ ui <- fluidPage(
                    choices = c(None = "",
                                "Double Quote" = '"',
                                "Single Quote" = "'"),
-                   selected = '"')
+                   selected = '"'),
+      shiny::verbatimTextOutput('be_result_auc')
     ),
     
     # Main panel for displaying outputs ----
@@ -88,7 +89,7 @@ ui <- fluidPage(
       shiny::h2('3: ECG 결과 확인'),
       checkboxInput("annotate1", "Annotate the ECG record", TRUE),
       shiny::h3('Lead II signal'),
-      shiny::verbatimTextOutput('be_result_auc'), 
+      
       plotOutput("plot_leadii"),
       #fluidRow(splitLayout(cellWidths = c("100%"), )),
       
