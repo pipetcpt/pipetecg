@@ -16,7 +16,8 @@ analyze_ecg <- function(df){
              col_names = c('time', 'index', 
                            'anno', 'no1', 
                            'no2', 'class')) %>% 
-    mutate(index = index*2)
+    mutate(index = index*2) %>% 
+    as.data.frame()
 }
 
 
@@ -150,7 +151,10 @@ server <- function(input, output) {
       ggplot(aes(index, value)) +
       facet_wrap(.~lead, ncol=1) +
       geom_line() +
-      labs(x = 'Time (ms)', y = 'ECG Amplitude') + theme_bw()
+      labs(x = 'Time (ms)', y = 'ECG Amplitude') + theme_bw() +
+      geom_vline(data = analyze_ecg(datasetInput()), 
+                 aes(xintercept = analyze_ecg(datasetInput())$index, 
+                     color = analyze_ecg(datasetInput())$anno))
     #geom_vline(data = anno, xintercept = anno$index, color = 'red')
   })
   
