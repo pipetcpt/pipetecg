@@ -135,8 +135,9 @@ server <- function(input, output) {
       mutate(index = index*2) %>% 
       ggplot(aes(index, II)) +
       geom_line() +
-      labs(x = 'Time (ms)', y = 'ECG Amplitude')+ theme_bw()
-      #geom_vline(data = anno, xintercept = anno$index, color = 'red')
+      labs(x = 'Time (ms)', y = 'ECG Amplitude')+ theme_bw() +
+      geom_vline(data = analyze_ecg(datasetInput()), 
+                 xintercept = analyze_ecg(datasetInput())$index, color = 'red')
     })
   
   output$plot_12lead <- renderPlot({
