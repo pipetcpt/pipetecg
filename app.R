@@ -151,10 +151,7 @@ server <- function(input, output) {
       ggplot(aes(index, value)) +
       facet_wrap(.~lead, ncol=1) +
       geom_line() +
-      labs(x = 'Time (ms)', y = 'ECG Amplitude') + theme_bw() +
-      geom_vline(data = analyze_ecg(datasetInput()), 
-                 aes(xintercept = analyze_ecg(datasetInput())$index, 
-                     color = analyze_ecg(datasetInput())$anno))
+      labs(x = 'Time (ms)', y = 'ECG Amplitude') + theme_bw()
     #geom_vline(data = anno, xintercept = anno$index, color = 'red')
   })
   
